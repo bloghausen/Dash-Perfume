@@ -1,0 +1,6 @@
+{
+  "name": "PerfumeDash",
+  "description": "Dashboard de análise de resultados de vendas de perfumes em marketplaces com importação via Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

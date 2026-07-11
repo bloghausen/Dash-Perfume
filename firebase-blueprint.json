@@ -1,0 +1,25 @@
+{
+  "entities": {
+    "Dashboard": {
+      "title": "Dashboard",
+      "description": "A dashboard instance containing sales and settings",
+      "type": "object",
+      "properties": {
+        "adsSpend": { "type": "number" },
+        "sales": {
+          "type": "string",
+          "description": "JSON stringified sales data to bypass array iteration checks in rules while saving"
+        },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["sales", "ownerId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "dashboards/{dashboardId}": {
+      "schema": { "$ref": "#/entities/Dashboard" },
+      "description": "Stores user dashboards which can be shared via ID"
+    }
+  }
+}

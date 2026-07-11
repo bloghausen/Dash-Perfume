@@ -1,0 +1,13 @@
+const LZString = require('lz-string');
+const data = { a: "hello world + test" };
+const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+console.log("compressed:", compressed);
+const url = new URL('http://example.com');
+url.searchParams.set('d', compressed);
+const finalUrl = url.toString();
+console.log("finalUrl:", finalUrl);
+const params = new URL(finalUrl).searchParams;
+const extracted = params.get('d');
+console.log("extracted:", extracted);
+const decompressed = LZString.decompressFromEncodedURIComponent(extracted);
+console.log("decompressed:", decompressed);

@@ -1,0 +1,6 @@
+{
+  "firestore": {
+    "database": "ai-studio-perfumedash-37425171-c722-4805-a253-3fb7b0ae90c9",
+    "rules": "firestore.rules"
+  }
+}
