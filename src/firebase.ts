@@ -104,6 +104,7 @@ export async function fetchDashboard(dashboardId: string) {
 
       return {
         sales: parsedSales,
+        lastSyncDate: data.lastSyncDate || null,
         adsSpend: data.adsSpend || 0
       };
     }
@@ -144,3 +145,24 @@ export const logoutGoogle = async () => {
   await auth.signOut();
   cachedAccessToken = null;
 };
+
+
+export async function saveMainDashboard(sales: any[], adsSpend: number, lastSyncDate: string) {
+  if (!auth.currentUser) return;
+  const dashboardRef = doc(db, 'dashboards', 'main');
+  const payloadStr = LZString.compressToBase64(JSON.stringify(sales));
+  
+  const payload = {
+    ownerId: auth.currentUser.uid,
+    sales: payloadStr,
+    adsSpend: Number(adsSpend) || 0,
+    lastSyncDate: lastSyncDate,
+    updatedAt: serverTimestamp()
+  };
+  
+  try {
+    await setDoc(dashboardRef, payload);
+  } catch (err) {
+    console.error("Error saving main dashboard", err);
+  }
+}

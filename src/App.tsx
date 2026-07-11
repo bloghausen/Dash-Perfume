@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import * as XLSX from 'xlsx';
 import LZString from 'lz-string';
-import { createDashboard, fetchDashboard, loginWithGoogle, getAccessToken, auth } from './firebase';
+import { createDashboard, fetchDashboard, saveMainDashboard, loginWithGoogle, getAccessToken, auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { MarketplaceLogo } from './components/MarketplaceLogo';
 
@@ -99,10 +99,11 @@ export default function App() {
          setIsFetching(false);
        });
     
+    
     } else {
-       // try fetching public sheets automatically
-       syncPublicData();
+       fetchMainDashboard();
     }
+
 
   }, []);
 
@@ -314,6 +315,26 @@ export default function App() {
     } catch (e) {
       console.error(e);
       showToast('Erro ao sair da conta.', 'error');
+    }
+  };
+
+  
+  const fetchMainDashboard = async () => {
+    try {
+      setIsFetching(true);
+      const data = await fetchDashboard('main');
+      if (data) {
+         setSales(data.sales);
+         setAdsSpend(String(data.adsSpend || 0));
+         if (data.lastSyncDate) {
+             setLastSyncDate(data.lastSyncDate);
+         }
+         setIsLoaded(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -653,6 +674,7 @@ export default function App() {
       setLastSyncDate(driveModifiedTime);
       setSales(newSales);
       if (hasAdsTab) setAdsSpend(String(newAdsSpend));
+      saveMainDashboard(newSales, hasAdsTab ? newAdsSpend : (Number(adsSpend) || 0), driveModifiedTime);
       setIsLoaded(true);
       showToast(`Dados importados do Google Sheets com sucesso! ${newSales.length} registros puxados.`, 'success');
     } catch (err: any) {
