@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import sheinLogo from '../shein.png';
 
 interface MarketplaceLogoProps {
   name: string;
@@ -21,15 +22,12 @@ const getDomainForMarketplace = (name: string) => {
 export const MarketplaceLogo: React.FC<MarketplaceLogoProps> = ({ name, className = "" }) => {
   const [error, setError] = useState(false);
   const domain = getDomainForMarketplace(name);
-
   const colors = ['#5b42f3', '#ff6b93', '#00d2ff', '#fbbf24', '#a78bfa'];
   
   if (!error && domain) {
     const isShein = domain === 'shein.com';
-    const imgSrc = isShein 
-      ? '/shein.png' 
-      : `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-      
+    const imgSrc = isShein ? sheinLogo : `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    
     return (
       <img 
         src={imgSrc} 

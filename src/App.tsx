@@ -26,6 +26,20 @@ interface SaleRecord {
 
 const COLORS = ['#5b42f3', '#ff6b93', '#00d2ff', '#fbbf24', '#a78bfa'];
 
+
+const normalizeMarketplace = (val: any) => {
+  if (!val) return 'Outros';
+  const str = String(val).trim();
+  const lower = str.toLowerCase();
+  if (lower === 'temu') return 'Temu';
+  if (lower === 'shein') return 'Shein';
+  if (lower.includes('mercado livre') || lower.includes('mercadolivre')) return 'Mercado Livre';
+  if (lower.includes('tiktok')) return 'TikTok Shop';
+  if (lower === 'shopee') return 'Shopee';
+  if (lower === 'amazon') return 'Amazon';
+  return str.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+};
+
 export default function App() {
   const [adsSpend, setAdsSpend] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('Todos');
@@ -127,6 +141,7 @@ export default function App() {
 
   const syncPublicData = async () => {
 
+  
   const parseCurrency = (val: any) => {
     if (typeof val === 'number') return val;
     if (!val) return 0;
@@ -286,7 +301,7 @@ export default function App() {
              if (parsedQuantity === 0) parsedQuantity = 1;
 
              const s: SaleRecord = {
-                marketplace: getVal(['Marketplace', 'Canal', 'Origem', 'Plataforma', 'Loja'], ['marketpla', 'canal', 'origem', 'plataforma', 'loja']) || 'Outros',
+                marketplace: normalizeMarketplace(getVal(['Marketplace', 'Canal', 'Origem', 'Plataforma', 'Loja'], ['marketpla', 'canal', 'origem', 'plataforma', 'loja'])),
                 title: getVal(['Título', 'Produto', 'Nome', 'Desc', 'Descrição', 'Item', 'Peça', 'Serviço'], ['título', 'produto', 'nome', 'desc', 'item', 'peça', 'serviço']) || 'Desconhecido',
                 quantity: parsedQuantity,
                 totalPrice: parseCurrency(getVal(['Preço Total', 'Total', 'Valor', 'Valor Total', 'Valor Recebido', 'Recebido', 'Pago', 'Venda', 'Faturamento', 'Bruto', 'Subtotal'], ['preço tota', 'total', 'valor', 'recebido', 'pago', 'venda', 'faturamento', 'bruto', 'subtotal'], ['taxa', 'frete', 'custo', 'líquido', 'liquido'])),
@@ -672,7 +687,7 @@ export default function App() {
           }
 
           const s: SaleRecord = {
-            marketplace: getVal(['Marketplace', 'Canal', 'Origem', 'Plataforma', 'Loja'], ['marketpla', 'canal', 'origem', 'plataforma', 'loja']) || 'Outros',
+            marketplace: normalizeMarketplace(getVal(['Marketplace', 'Canal', 'Origem', 'Plataforma', 'Loja'], ['marketpla', 'canal', 'origem', 'plataforma', 'loja'])),
             title: getVal(['Título', 'Produto', 'Nome', 'Desc', 'Descrição', 'Item', 'Peça', 'Serviço'], ['título', 'produto', 'nome', 'desc', 'item', 'peça', 'serviço']) || 'Desconhecido',
             quantity: parsedQuantity,
             totalPrice: parseCurrency(getVal(['Preço Total', 'Total', 'Valor', 'Valor Total', 'Valor Recebido', 'Recebido', 'Pago', 'Venda', 'Faturamento', 'Bruto', 'Subtotal'], ['preço tota', 'total', 'valor', 'recebido', 'pago', 'venda', 'faturamento', 'bruto', 'subtotal'], ['taxa', 'frete', 'custo', 'líquido', 'liquido'])),
@@ -759,7 +774,9 @@ export default function App() {
       vend += s.quantity;
       lucro += s.profit;
 
-      mktMap[s.marketplace] = (mktMap[s.marketplace] || 0) + s.totalPrice;
+            // normalize for old data
+      const mkt = normalizeMarketplace(s.marketplace);
+      mktMap[mkt] = (mktMap[mkt] || 0) + s.totalPrice;
       prodMap[s.title] = (prodMap[s.title] || 0) + s.totalPrice;
     });
 
