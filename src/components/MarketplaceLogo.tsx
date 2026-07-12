@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import sheinLogo from '../shein.png';
+import sheinLogo from '../assets/shein.webp';
 
 interface MarketplaceLogoProps {
   name: string;

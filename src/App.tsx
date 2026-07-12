@@ -31,12 +31,12 @@ const normalizeMarketplace = (val: any) => {
   if (!val) return 'Outros';
   const str = String(val).trim();
   const lower = str.toLowerCase();
-  if (lower === 'temu') return 'Temu';
-  if (lower === 'shein') return 'Shein';
+  if (lower.includes('temu')) return 'Temu';
+  if (lower.includes('shein')) return 'Shein';
   if (lower.includes('mercado livre') || lower.includes('mercadolivre')) return 'Mercado Livre';
   if (lower.includes('tiktok')) return 'TikTok Shop';
-  if (lower === 'shopee') return 'Shopee';
-  if (lower === 'amazon') return 'Amazon';
+  if (lower.includes('shopee')) return 'Shopee';
+  if (lower.includes('amazon')) return 'Amazon';
   return str.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
 };
 
