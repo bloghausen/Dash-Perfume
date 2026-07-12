@@ -295,7 +295,9 @@ export default function App() {
              };
 
              const isEmptyRow = rowValues.every((v: any) => !v || String(v).trim() === '');
-             if (!isEmptyRow) {
+             const isTemplateRow = s.title.includes('Way Million') && s.quantity === 1 && s.totalPrice < 35 && s.totalPrice > 25;
+             
+             if (!isEmptyRow && !isTemplateRow) {
                 newSales.push(s);
              }
         }
@@ -682,6 +684,10 @@ export default function App() {
           const isEmptyRow = rowValues.every((v: any) => v === null || v === undefined || String(v).trim() === '');
           if (isEmptyRow) continue;
 
+          // Skip template row
+          const isTemplateRow = s.title.includes('Way Million') && s.quantity === 1 && s.totalPrice < 35 && s.totalPrice > 25;
+          if (isTemplateRow) continue;
+
           // Skip total/summary rows
           const isTotalRow = rowValues.slice(0, 3).some((v: any) => {
               const str = String(v).trim().toLowerCase();
@@ -768,7 +774,7 @@ export default function App() {
     
     let lastIndex = -1;
     for (let i = monthlyChartDataAll.length - 1; i >= 0; i--) {
-        if (monthlyChartDataAll[i].receita > 0 || monthlyChartDataAll[i].lucro > 0) {
+        if (monthlyChartDataAll[i].receita > 50 || monthlyChartDataAll[i].quantidade > 1) {
             lastIndex = i;
             break;
         }
@@ -1076,7 +1082,7 @@ export default function App() {
                             onChange={(e) => setSelectedMonth(e.target.value)}
                             className="bg-transparent text-white text-sm outline-none appearance-none font-bold cursor-pointer"
                           >
-                            {months.map(m => (
+                            {['Todos', ...monthlyData.map(m => m.name)].map(m => (
                               <option key={m} value={m} className="text-slate-800">{m}</option>
                             ))}
                           </select>
