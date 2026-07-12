@@ -737,6 +737,9 @@ export default function App() {
     const mlist = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
     sales.forEach(s => {
+       const isTemplateRow = s.title.includes('Way Million') && s.quantity === 1 && s.totalPrice < 35 && s.totalPrice > 25;
+       if (isTemplateRow) return;
+
        if (!monthMap[s.month]) monthMap[s.month] = { receita: 0, lucro: 0, quantidade: 0 };
        monthMap[s.month].receita += s.totalPrice;
        monthMap[s.month].lucro += s.profit;
@@ -750,6 +753,8 @@ export default function App() {
     });
 
     filteredSales.forEach(s => {
+      const isTemplateRow = s.title.includes('Way Million') && s.quantity === 1 && s.totalPrice < 35 && s.totalPrice > 25;
+      if (isTemplateRow) return;
       rec += s.totalPrice;
       vend += s.quantity;
       lucro += s.profit;
@@ -1721,7 +1726,7 @@ export default function App() {
               </div>
 
               <div className="space-y-6">
-                {marketplaceData.slice(0,4).map((m, i) => (
+                {marketplaceData.map((m, i) => (
                   <div key={m.name} className="flex items-center gap-4">
                     <div className="relative">
                       <MarketplaceLogo 
