@@ -1,46 +1,60 @@
 const fs = require('fs');
 let code = fs.readFileSync('src/App.tsx', 'utf8');
 
-const parseCurrency = `
-      const parseCurrency = (val: any) => {
-        if (typeof val === 'number') return val;
-        if (!val) return 0;
-        let str = String(val).trim();
-        let isNegative = false;
-        if (str.includes('-') || (str.includes('(') && str.includes(')'))) {
-           isNegative = true;
-        }
-        str = str.replace(/[R$\\s%a-zA-Z()\\-]/g, '');
-        
-        // Check for pt-BR vs en-US
-        if (str.includes('.') && str.includes(',')) {
-           if (str.indexOf('.') < str.indexOf(',')) {
-              // pt-BR: 1.234,56
-              str = str.replace(/\\./g, '').replace(',', '.');
-           } else {
-              // en-US: 1,234.56
-              str = str.replace(/,/g, '');
-           }
-        } else if (str.includes(',')) {
-           if (str.match(/,\\d{2}$/) || str.match(/,\\d$/)) {
-              str = str.replace(',', '.');
-           } else {
-              str = str.replace(/,/g, '');
-           }
-        } else if (str.includes('.')) {
-           if (str.match(/^\\d{1,3}\\.\\d{3}$/) || str.match(/^\\d{1,3}(\\.\\d{3})+$/)) {
-              str = str.replace(/\\./g, '');
-           }
-        }
-        const num = parseFloat(str) || 0;
-        return isNegative ? -num : num;
-      };
-`;
+// Patch syncPublicData
+const targetSync = `        if (lines.length < 2) continue;
 
-code = code.replace("const newSales: SaleRecord[] = [];", parseCurrency + "\n      const newSales: SaleRecord[] = [];\n      let newAdsSpend = 0;\n      let hasAdsTab = false;");
+        let headerRowIndex = 0;`;
 
-const adsLogic = `
-        if (normalizedTitle === 'ads') {
+const replacementSync = `        if (lines.length < 2) continue;
+
+        if (tab === 'ADS') {
+           hasAdsTab = true;
+           const row2 = parseCsvLine(lines[1] || "");
+           if (row2 && row2.length >= 2) {
+               newAdsSpend += parseCurrency(row2[1]);
+           }
+           continue;
+        }
+
+        let headerRowIndex = 0;`;
+code = code.replace(targetSync, replacementSync);
+
+const targetSyncRemoveADS1 = `           if (tab === 'ADS') {
+              if (rowStr.includes('valor') || rowStr.includes('custo') || rowStr.includes('gasto') || rowStr.includes('investimento') || rowStr.includes('total')) score++;
+           } else {
+              if (rowStr.includes('valor') || rowStr.includes('preço') || rowStr.includes('faturamento') || rowStr.includes('recebido')) score++;
+              if (rowStr.includes('total')) score++;
+              if (rowStr.includes('lucro') || rowStr.includes('líquido') || rowStr.includes('liquido') || rowStr.includes('resultado')) score++;
+              if (rowStr.includes('produto') || rowStr.includes('título') || rowStr.includes('nome') || rowStr.includes('descri') || rowStr.includes('item') || rowStr.includes('peça')) score++;
+           }`;
+const replacementSyncRemoveADS1 = `           if (rowStr.includes('valor') || rowStr.includes('preço') || rowStr.includes('faturamento') || rowStr.includes('recebido')) score++;
+           if (rowStr.includes('total')) score++;
+           if (rowStr.includes('lucro') || rowStr.includes('líquido') || rowStr.includes('liquido') || rowStr.includes('resultado')) score++;
+           if (rowStr.includes('produto') || rowStr.includes('título') || rowStr.includes('nome') || rowStr.includes('descri') || rowStr.includes('item') || rowStr.includes('peça')) score++;`;
+
+code = code.replace(targetSyncRemoveADS1, replacementSyncRemoveADS1);
+
+const targetSyncRemoveADS2 = `           if (tab === 'ADS') {
+             hasAdsTab = true;
+             const cost = parseCurrency(getVal(['Valor', 'Custo', 'Gasto', 'Investimento', 'Total'], ['valor', 'custo', 'gasto', 'investimento', 'total']));
+             newAdsSpend += cost;
+           } else {
+             let parsedQuantity = 1;`;
+const replacementSyncRemoveADS2 = `             let parsedQuantity = 1;`;
+code = code.replace(targetSyncRemoveADS2, replacementSyncRemoveADS2);
+
+const targetSyncRemoveADS3 = `             if (!isEmptyRow) {
+                newSales.push(s);
+             }
+           }`;
+const replacementSyncRemoveADS3 = `             if (!isEmptyRow) {
+                newSales.push(s);
+             }`;
+code = code.replace(targetSyncRemoveADS3, replacementSyncRemoveADS3);
+
+// Patch handleImportGoogleSheet
+const targetImport = `        if (normalizedTitle === 'ads') {
           hasAdsTab = true;
           // Find the column containing the cost
           let headerRowIndex = 0;
@@ -82,17 +96,17 @@ const adsLogic = `
           }
           
           return;
-        }
-`;
+        }`;
 
-code = code.replace("if (!normalizedTitle.includes('pagina')", adsLogic + "\n        if (!normalizedTitle.includes('pagina')");
-
-// Also remove parseCurrency inside to avoid redeclaration, but it's ok, inner function hides outer one.
-// Let's remove the inner parseCurrency declaration completely and just let it use the outer one.
-code = code.replace(/const parseCurrency = \(val: any\) => \{[\s\S]*?return isNegative \? -num : num;\n\s*};\n/m, '');
-
-// Finally, update the adsSpend state if we found the ADS tab
-code = code.replace("setSales(newSales);", "setSales(newSales);\n      if (hasAdsTab) setAdsSpend(String(newAdsSpend));");
+const replacementImport = `        if (normalizedTitle === 'ads') {
+          hasAdsTab = true;
+          const row2 = values[1] || [];
+          if (row2 && row2.length >= 2) {
+             newAdsSpend += parseCurrency(row2[1]);
+          }
+          return;
+        }`;
+code = code.replace(targetImport, replacementImport);
 
 fs.writeFileSync('src/App.tsx', code);
-console.log("Patched!");
+console.log("Patched ADS cost logic");

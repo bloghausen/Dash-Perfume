@@ -193,6 +193,15 @@ export default function App() {
         const lines = csvData.split('\n').map(line => line.trim()).filter(line => line.length > 0);
         if (lines.length < 2) continue;
 
+        if (tab === 'ADS') {
+           hasAdsTab = true;
+           const row2 = parseCsvLine(lines[1] || "");
+           if (row2 && row2.length >= 2) {
+               newAdsSpend += parseCurrency(row2[1]);
+           }
+           continue;
+        }
+
         let headerRowIndex = 0;
         let maxScore = -1;
         for (let r = 0; r < Math.min(lines.length, 50); r++) {
@@ -202,14 +211,10 @@ export default function App() {
            
            
           
-           if (tab === 'ADS') {
-              if (rowStr.includes('valor') || rowStr.includes('custo') || rowStr.includes('gasto') || rowStr.includes('investimento') || rowStr.includes('total')) score++;
-           } else {
-              if (rowStr.includes('valor') || rowStr.includes('preço') || rowStr.includes('faturamento') || rowStr.includes('recebido')) score++;
-              if (rowStr.includes('total')) score++;
-              if (rowStr.includes('lucro') || rowStr.includes('líquido') || rowStr.includes('liquido') || rowStr.includes('resultado')) score++;
-              if (rowStr.includes('produto') || rowStr.includes('título') || rowStr.includes('nome') || rowStr.includes('descri') || rowStr.includes('item') || rowStr.includes('peça')) score++;
-           }
+           if (rowStr.includes('valor') || rowStr.includes('preço') || rowStr.includes('faturamento') || rowStr.includes('recebido')) score++;
+           if (rowStr.includes('total')) score++;
+           if (rowStr.includes('lucro') || rowStr.includes('líquido') || rowStr.includes('liquido') || rowStr.includes('resultado')) score++;
+           if (rowStr.includes('produto') || rowStr.includes('título') || rowStr.includes('nome') || rowStr.includes('descri') || rowStr.includes('item') || rowStr.includes('peça')) score++;
            
            if (score > maxScore && score > 0) {
               maxScore = score;
@@ -241,11 +246,6 @@ export default function App() {
              return key ? rowObj[key] : null;
            };
 
-           if (tab === 'ADS') {
-             hasAdsTab = true;
-             const cost = parseCurrency(getVal(['Valor', 'Custo', 'Gasto', 'Investimento', 'Total'], ['valor', 'custo', 'gasto', 'investimento', 'total']));
-             newAdsSpend += cost;
-           } else {
              let parsedQuantity = 1;
              let quantityRaw = getVal(['Quantidade', 'Qtd', 'Qtde'], ['quantidad', 'qtd']);
              if (quantityRaw !== null && quantityRaw !== undefined && String(quantityRaw).trim() !== '') {
@@ -267,7 +267,6 @@ export default function App() {
              if (!isEmptyRow) {
                 newSales.push(s);
              }
-           }
         }
       }
     }
@@ -485,45 +484,10 @@ export default function App() {
         
         if (normalizedTitle === 'ads') {
           hasAdsTab = true;
-          // Find the column containing the cost
-          let headerRowIndex = 0;
-          let maxScore = -1;
-          for (let r = 0; r < Math.min(values.length, 50); r++) {
-             const rowArr = values[r] || [];
-             const rowStr = rowArr.join(' ').toLowerCase();
-             let score = 0;
-             if (rowStr.includes('valor') || rowStr.includes('custo') || rowStr.includes('gasto') || rowStr.includes('investimento') || rowStr.includes('total')) score++;
-             if (score > maxScore && score > 0) {
-                maxScore = score;
-                headerRowIndex = r;
-             }
+          const row2 = values[1] || [];
+          if (row2 && row2.length >= 2) {
+             newAdsSpend += parseCurrency(row2[1]);
           }
-          const actualHeader = values[headerRowIndex] || [];
-          
-          for (let i = headerRowIndex + 1; i < values.length; i++) {
-             const rowValues = values[i] || [];
-             const rowObj: any = {};
-             actualHeader.forEach((h: string, idx: number) => {
-                if (h && String(h).trim()) rowObj[String(h).trim()] = rowValues[idx];
-             });
-             
-             const getVal = (exactMatches: string[], partialMatches: string[], avoid: string[] = []) => {
-               const keys = Object.keys(rowObj);
-               let key = keys.find(k => exactMatches.some(e => k.toLowerCase() === e.toLowerCase()));
-               if (key) return rowObj[key];
-               
-               key = keys.find(k => {
-                  const kl = k.toLowerCase();
-                  if (avoid.some(a => kl.includes(a.toLowerCase()))) return false;
-                  return partialMatches.some(p => kl.includes(p.toLowerCase()));
-               });
-               return key ? rowObj[key] : null;
-             };
-             
-             const cost = parseCurrency(getVal(['Valor', 'Custo', 'Gasto', 'Investimento', 'Total'], ['valor', 'custo', 'gasto', 'investimento', 'total']));
-             newAdsSpend += cost;
-          }
-          
           return;
         }
 
