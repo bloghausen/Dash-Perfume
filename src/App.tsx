@@ -91,7 +91,9 @@ export default function App() {
        setIsFetching(false);
     } else if (id) {
        fetchDashboard(id).then(data => {
-         if (data) {
+         
+      if (data && data.sales && data.sales.length > 0) {
+
             setSales(data.sales);
             setAdsSpend(String(data.adsSpend));
             setIsLoaded(true);
@@ -322,7 +324,13 @@ export default function App() {
   const fetchMainDashboard = async () => {
     try {
       setIsFetching(true);
-      const data = await fetchDashboard('main');
+      
+      // Timeout de 3 segundos para não travar a tela
+      const data = await Promise.race([
+        fetchDashboard('main'),
+        new Promise<null>(resolve => setTimeout(() => resolve(null), 3000))
+      ]);
+
       if (data) {
          setSales(data.sales);
          setAdsSpend(String(data.adsSpend || 0));
@@ -330,6 +338,9 @@ export default function App() {
              setLastSyncDate(data.lastSyncDate);
          }
          setIsLoaded(true);
+      } else {
+         // Fallback to public sheet if db is empty or failed
+         syncPublicData();
       }
     } catch (e) {
       console.error(e);
